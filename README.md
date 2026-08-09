@@ -7,6 +7,31 @@
 [![GitHub](https://img.shields.io/badge/GitHub-Repository-181717?logo=github)](https://github.com/shreevarshan918/BILLORA)
 
 ---
+# Screenshots
+
+## Home
+
+![Billora Home](screenshots/Home.png)
+
+## Dashboard
+
+![Billora Dashboard](screenshots/Dashboard.png)
+
+## Invoice Management
+
+![Billora Invoices](screenshots/InvoicesList.png)
+
+## Invoice Details
+
+![Billora Invoice](screenshots/Invoice.png)
+
+## Create Invoice
+
+![Billora Invoice Form](screenshots/InvoiceForm.png)
+
+## Login
+
+![Billora Login](screenshots/Login.png)
 
 ## Overview
 
