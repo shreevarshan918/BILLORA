@@ -15,8 +15,14 @@ function BusinessSettings() {
         upi_id: ""
     });
 
+    const [logoUrl, setLogoUrl] = useState("");
+    const [logoFile, setLogoFile] = useState(null);
+    const [logoPreview, setLogoPreview] = useState("");
+
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
+    const [uploadingLogo, setUploadingLogo] = useState(false);
+
     const [message, setMessage] = useState("");
     const [error, setError] = useState("");
 
@@ -46,6 +52,9 @@ function BusinessSettings() {
                         gstin: response.data.gstin || "",
                         upi_id: response.data.upi_id || ""
                     });
+
+                    setLogoUrl(response.data.logo_url || "");
+                    setLogoPreview(response.data.logo_url || "");
 
                 }
 
@@ -83,6 +92,102 @@ function BusinessSettings() {
     };
 
 
+    const handleLogoChange = (e) => {
+
+        const file = e.target.files?.[0];
+
+        if (!file) return;
+
+
+        if (!file.type.startsWith("image/")) {
+
+            setError("Please select an image file.");
+
+            return;
+
+        }
+
+
+        if (file.size > 5 * 1024 * 1024) {
+
+            setError("Logo must be smaller than 5 MB.");
+
+            return;
+
+        }
+
+
+        setError("");
+        setMessage("");
+
+        setLogoFile(file);
+
+        setLogoPreview(URL.createObjectURL(file));
+
+    };
+
+
+    const uploadLogo = async () => {
+
+        if (!logoFile) {
+
+            setError("Please select a logo first.");
+
+            return;
+
+        }
+
+
+        setUploadingLogo(true);
+        setMessage("");
+        setError("");
+
+
+        try {
+
+            const formData = new FormData();
+
+            formData.append("logo", logoFile);
+
+
+            const response = await api.post(
+                "/business/logo",
+                formData,
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`
+                    }
+                }
+            );
+
+
+            setLogoUrl(response.data.logo_url);
+            setLogoPreview(response.data.logo_url);
+            setLogoFile(null);
+
+            setMessage(
+                "Business logo uploaded successfully."
+            );
+
+
+        } catch (err) {
+
+            console.error(err);
+
+            setError(
+                err.response?.data?.message ||
+                "Failed to upload business logo."
+            );
+
+        } finally {
+
+            setUploadingLogo(false);
+
+        }
+
+    };
+
+
     const handleSubmit = async (e) => {
 
         e.preventDefault();
@@ -90,14 +195,18 @@ function BusinessSettings() {
         setMessage("");
         setError("");
 
+
         if (!form.name.trim()) {
 
             setError("Business name is required.");
 
             return;
+
         }
 
+
         setSaving(true);
+
 
         try {
 
@@ -107,9 +216,11 @@ function BusinessSettings() {
                 { headers }
             );
 
+
             setMessage(
                 "Business profile saved successfully."
             );
+
 
         } catch (err) {
 
@@ -131,9 +242,11 @@ function BusinessSettings() {
 
         return (
             <div className="settings-page">
+
                 <div className="empty-state">
                     Loading business profile...
                 </div>
+
             </div>
         );
 
@@ -215,6 +328,103 @@ function BusinessSettings() {
                                 These details will appear on
                                 your invoices.
                             </p>
+
+
+                            {/* BUSINESS LOGO */}
+
+                            <div className="form-group full-width">
+
+                                <label>
+                                    Business Logo
+                                </label>
+
+                                <div
+                                    style={{
+                                        display: "flex",
+                                        alignItems: "center",
+                                        gap: "20px",
+                                        marginTop: "10px"
+                                    }}
+                                >
+
+                                    {logoPreview ? (
+
+                                        <img
+                                            src={logoPreview}
+                                            alt="Business logo"
+                                            style={{
+                                                width: "100px",
+                                                height: "100px",
+                                                objectFit: "contain",
+                                                border: "1px solid #ddd",
+                                                borderRadius: "8px",
+                                                padding: "8px",
+                                                background: "#fff"
+                                            }}
+                                        />
+
+                                    ) : (
+
+                                        <div
+                                            style={{
+                                                width: "100px",
+                                                height: "100px",
+                                                display: "flex",
+                                                alignItems: "center",
+                                                justifyContent: "center",
+                                                border: "1px dashed #bbb",
+                                                borderRadius: "8px",
+                                                color: "#777",
+                                                fontSize: "13px",
+                                                textAlign: "center"
+                                            }}
+                                        >
+                                            No logo
+                                        </div>
+
+                                    )}
+
+
+                                    <div>
+
+                                        <input
+                                            id="business-logo"
+                                            type="file"
+                                            accept="image/png,image/jpeg,image/webp"
+                                            onChange={handleLogoChange}
+                                        />
+
+                                        <button
+                                            type="button"
+                                            className="primary-button"
+                                            onClick={uploadLogo}
+                                            disabled={
+                                                !logoFile ||
+                                                uploadingLogo
+                                            }
+                                            style={{
+                                                marginTop: "10px"
+                                            }}
+                                        >
+                                            {uploadingLogo
+                                                ? "Uploading..."
+                                                : "Upload Logo"}
+                                        </button>
+
+                                        <p
+                                            style={{
+                                                fontSize: "12px",
+                                                marginTop: "8px"
+                                            }}
+                                        >
+                                            PNG, JPG or WebP. Maximum 5 MB.
+                                        </p>
+
+                                    </div>
+
+                                </div>
+
+                            </div>
 
 
                             <div className="settings-grid">
@@ -307,19 +517,19 @@ function BusinessSettings() {
 
                                 <div className="form-group">
 
-    <label>
-        UPI ID
-    </label>
+                                    <label>
+                                        UPI ID
+                                    </label>
 
-    <input
-        type="text"
-        name="upi_id"
-        placeholder="yourname@upi"
-        value={form.upi_id}
-        onChange={handleChange}
-    />
+                                    <input
+                                        type="text"
+                                        name="upi_id"
+                                        placeholder="yourname@upi"
+                                        value={form.upi_id}
+                                        onChange={handleChange}
+                                    />
 
-</div>
+                                </div>
 
                             </div>
 
@@ -358,5 +568,6 @@ function BusinessSettings() {
     );
 
 }
+
 
 export default BusinessSettings;
