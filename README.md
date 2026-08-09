@@ -439,7 +439,7 @@ The core application functionality is implemented and deployed.
 
 ## Author
 
-**Shreevarshan Y J **
+**Shreevarshan Y J**
 
 GitHub:
 
