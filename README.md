@@ -318,23 +318,6 @@ Parameterized queries help reduce the risk of SQL injection.
 
 ---
 
-## Environment Variables
-
-The backend uses environment variables for sensitive configuration.
-
-Example:
-
-```env
-DATABASE_URL=your_postgresql_database_url
-JWT_SECRET=your_jwt_secret
-PORT=5000
-```
-
-The `.env` file must **never** be committed to GitHub.
-
-Production environment variables are configured through the deployment platform.
-
----
 
 ## Local Development
 
