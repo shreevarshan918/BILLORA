@@ -1,5 +1,5 @@
 const pool = require("../db");
-
+const cloudinary = require("../config/cloudinary");
 
 // GET business profile
 const getBusiness = async (req, res) => {
@@ -71,8 +71,6 @@ const createOrUpdateBusiness = async (req, res) => {
 
         if (existing.rows.length > 0) {
 
-            // UPDATE existing business
-
             result = await pool.query(
                 `UPDATE businesses
                  SET
@@ -96,8 +94,6 @@ const createOrUpdateBusiness = async (req, res) => {
             );
 
         } else {
-
-            // CREATE new business
 
             result = await pool.query(
                 `INSERT INTO businesses
@@ -146,7 +142,93 @@ const createOrUpdateBusiness = async (req, res) => {
 };
 
 
+// UPLOAD BUSINESS LOGO
+const uploadBusinessLogo = async (req, res) => {
+
+    try {
+
+        if (!req.file) {
+
+            return res.status(400).json({
+                message: "Please select a logo image."
+            });
+
+        }
+
+
+        const uploadToCloudinary = () => {
+
+            return new Promise((resolve, reject) => {
+
+                const stream = cloudinary.uploader.upload_stream(
+                    {
+                        folder: "billora/business-logos",
+                        resource_type: "image"
+                    },
+                    (error, result) => {
+
+                        if (error) {
+                            reject(error);
+                        } else {
+                            resolve(result);
+                        }
+
+                    }
+                );
+
+                stream.end(req.file.buffer);
+
+            });
+
+        };
+
+
+        const result = await uploadToCloudinary();
+
+
+        const databaseResult = await pool.query(
+            `UPDATE businesses
+             SET logo_url = $1
+             WHERE user_id = $2
+             RETURNING *`,
+            [
+                result.secure_url,
+                req.user.id
+            ]
+        );
+
+
+        if (databaseResult.rows.length === 0) {
+
+            return res.status(404).json({
+                message: "Business profile not found. Save your business profile first."
+            });
+
+        }
+
+
+        res.json({
+            message: "Business logo uploaded successfully.",
+            logo_url: result.secure_url,
+            business: databaseResult.rows[0]
+        });
+
+
+    } catch (error) {
+
+        console.error("Upload business logo error:", error);
+
+        res.status(500).json({
+            message: "Failed to upload business logo."
+        });
+
+    }
+
+};
+
+
 module.exports = {
     getBusiness,
-    createOrUpdateBusiness
+    createOrUpdateBusiness,
+    uploadBusinessLogo
 };
